@@ -72,7 +72,7 @@ viewModel.loadBaiduJob.observe(this, viewModelStore) {
 
 Kotlin用法： [KtMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/KtMainActivity.kt)
 
-Java用法： [JMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/JMainActivity.kt)
+Java用法： [JMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/JMainActivity.java)
 
 
 
