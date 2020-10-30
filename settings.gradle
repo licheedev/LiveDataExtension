@@ -1,0 +1,3 @@
+include ':livedata-ext'
+include ':app'
+rootProject.name = "LiveDataExtension"
