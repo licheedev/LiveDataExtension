@@ -9,6 +9,7 @@ https://juejin.im/post/6844903623252508685
 
 ## 用法
 ```gradle
+// 根build.gradle
 allprojects {
   repositories {
     ...
@@ -16,8 +17,20 @@ allprojects {
   }
 }
 
-  dependencies {
-        implementation 'com.licheedev:livedata-ext:1.0.0'
+// module build.gradle
+android {
+    ...
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'com.licheedev:livedata-ext:1.0.0'
 }
 ```
 
