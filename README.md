@@ -3,21 +3,14 @@
 
 ## 代码实现参考以下项目/文章，感谢
 > https://github.com/Flywith24/WrapperLiveData
+
 https://github.com/KunMinX/UnPeek-LiveData
+
 https://juejin.im/post/6844903623252508685
 
 
 ## 用法
 ```gradle
-// 根build.gradle
-allprojects {
-  repositories {
-    ...
-    maven { url 'https://dl.bintray.com/licheedev/maven' }
-  }
-}
-
-// module build.gradle
 android {
     ...
     compileOptions {
@@ -78,7 +71,20 @@ viewModel.loadBaiduJob.observe(this, viewModelStore) {
             tvContent.text = it.toString()
         }
     }
+    
+    //handleProgress {
+    //    // 可选，进度事件
+    //}
+    //
+    //handleCustom("custom_key") {
+    //    // 可选，自定义事件
+    //}
+    //
+    //handleCustom { key, value ->
+    //    // 可选，任意自定义事件
+    //}
 }
+
 ```
 
 其他用法可以参考

@@ -15,9 +15,9 @@ class MainActivity : AppCompatActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     fun Any.showToast() {
-        Toast.makeText(applicationContext,this.toString(),Toast.LENGTH_SHORT).show()
+        Toast.makeText(applicationContext, this.toString(), Toast.LENGTH_SHORT).show()
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,6 +41,18 @@ class MainActivity : AppCompatActivity() {
                     tvContent.text = it.toString()
                 }
             }
+            
+            //handleProgress {
+            //    // 可选，进度事件
+            //}
+            //
+            //handleCustom("custom_key") {
+            //    // 可选，自定义事件
+            //}
+            //
+            //handleCustom { key, value ->
+            //    // 可选，任意自定义事件
+            //}
         }
 
     }
