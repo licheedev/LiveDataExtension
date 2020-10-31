@@ -2,8 +2,8 @@
 基于LiveData的一些扩展类。解决LiveData数据倒灌，提供类似onSuccss、onFailure等多状态异步回调方法。
 
 ## 代码实现参考以下项目/文章，感谢
-> https://github.com/Flywith24/WrapperLiveData
-> https://github.com/KunMinX/UnPeek-LiveData
+> https://github.com/Flywith24/WrapperLiveData </br>
+> https://github.com/KunMinX/UnPeek-LiveData </br>
 > https://juejin.im/post/6844903623252508685
 
 
