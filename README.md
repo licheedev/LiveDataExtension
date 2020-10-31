@@ -3,10 +3,8 @@
 
 ## 代码实现参考以下项目/文章，感谢
 > https://github.com/Flywith24/WrapperLiveData
-
-https://github.com/KunMinX/UnPeek-LiveData
-
-https://juejin.im/post/6844903623252508685
+> https://github.com/KunMinX/UnPeek-LiveData
+> https://juejin.im/post/6844903623252508685
 
 
 ## 用法
