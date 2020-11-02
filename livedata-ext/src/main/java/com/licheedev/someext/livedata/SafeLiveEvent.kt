@@ -15,6 +15,8 @@
  */
 package com.licheedev.someext.livedata
 
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -29,7 +31,7 @@ import androidx.lifecycle.ViewModelStore
 class SafeLiveEvent<T> : LiveData<T>() {
 
     private val mProxy = EventLiveData<T>()
-    
+
     /**
      * 【慎用】Observer总是能接收到事件，跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
      *
@@ -77,7 +79,8 @@ class SafeLiveEvent<T> : LiveData<T>() {
         mProxy.setValue(Event(value))
     }
 
-    override fun postValue(value: T) {
+
+    public override fun postValue(value: T) {
         mProxy.postValue(Event(value))
     }
 
@@ -85,7 +88,24 @@ class SafeLiveEvent<T> : LiveData<T>() {
         return mProxy.value?.content
     }
 
+    /** 如果调用线程在主线程，则使用 [LiveData.setValue]，否则使用 [Handler.post] 之后 [LiveData.setValue] */
+    fun setPostValue(value: T) {
+        if (isUIThread()) {
+            setValue(value)
+        } else {
+            mainHandler.post {
+                setValue(value)
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "SafeLiveEvent"
+
+        private val mainHandler = Handler(Looper.getMainLooper())
+
+        private fun isUIThread(): Boolean {
+            return Looper.myLooper() == Looper.getMainLooper()
+        }
     }
 }
