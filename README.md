@@ -40,7 +40,7 @@ liveEvent.observeSingle(this) {
 }
 
 liveEvent.observePageOnce(this, viewModelStore) {
-    // 事件能多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
+    // 事件能被多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
 }
 ```
 
