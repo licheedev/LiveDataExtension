@@ -1,9 +1,11 @@
 package com.licheedev.livedataextensiondemo
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.licheedev.myutils.LogPlus
 import com.licheedev.someext.livedata.*
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import java.lang.RuntimeException
 
@@ -17,12 +19,16 @@ class KtMainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val sampleJob = AsyncJob<String>()
+        btnAnotherActivity.setOnClickListener {
+            startActivity(Intent(this, AnotherActivity::class.java))
+        }
+
+        val sampleJob = ShareData.sampleJob
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Single)
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Always)
         sampleJob["type"] = 999
         // dsl方式
-        sampleJob.observe(this) {
+        sampleJob.observe(this, viewModelStore) {
 
             handleBegin {
                 LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=$attachment")
@@ -50,7 +56,7 @@ class KtMainActivity : AppCompatActivity() {
         }
 
         // when/switch-case方式
-        sampleJob.observe(this) { it ->
+        sampleJob.observe(this, viewModelStore) { it ->
             when (it.key) {
                 AsyncData.BEGIN -> {
                     LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${it.attachment}")
@@ -74,7 +80,7 @@ class KtMainActivity : AppCompatActivity() {
         }
 
         // 匿名内部类方式（推荐Java代码使用）
-        sampleJob.observe(this, object : AsyncJobObserver<String>() {
+        sampleJob.observe(this, viewModelStore, object : AsyncJobObserver<String>() {
 
             override fun onBegin() {
                 LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${attachment}")
@@ -104,6 +110,37 @@ class KtMainActivity : AppCompatActivity() {
             sampleJob.postFailure("任务失败了", RuntimeException("实际异常"))
             sampleJob.postCustom("some_custom_key", null) // 自定义事件
             sampleJob.postCustom("other_custom_key", 234) // 自定义事件
+        }
+
+
+
+
+
+        btnObserveMore.setOnClickListener {
+
+            // 匿名内部类方式（推荐Java代码使用）
+            sampleJob.observe(this, viewModelStore, object : AsyncJobObserver<String>() {
+
+                override fun onBegin() {
+                    LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${attachment}")
+                }
+
+                override fun onSuccess(result: String) {
+                    LogPlus.i(TAG, "任务成功，结果=${result}，判断参数=${sampleJob["type"] == 999}")
+                }
+
+                override fun onFailure(e: AsyncJobException) {
+                    LogPlus.i(TAG, "任务失败，异常=${e},cause=${e.cause}")
+                }
+
+                override fun onProgress(progress: Int) {
+                    LogPlus.i(TAG, "进度=${progress}")
+                }
+
+                override fun onCustom(key: String, value: Any) {
+                    LogPlus.i(TAG, "任何自定义事件(无数据时，value=key)，key=${key},事件数据=${value}")
+                }
+            })
         }
 
     }

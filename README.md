@@ -7,7 +7,7 @@
 > https://juejin.im/post/6844903623252508685
 
 
-## 用法
+## 添加依赖
 ```gradle
 android {
     ...
@@ -21,11 +21,30 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.0.1'
+    implementation 'com.licheedev:livedata-ext:1.0.2'
 }
 ```
 
-## 代码示例
+## LiveEvent用法
+```kotlin
+val liveEvent = LiveEvent<String>()
+// 或者可配置事件超时，超时后，观察者无法接收到事件
+//val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
+
+liveEvent.observe(this) {
+    // 跟原版LiveData相似，观察者始终能接收到事件
+}
+
+liveEvent.observeSingle(this) {
+    // 事件仅能被1个观察者接收到1次
+}
+
+liveEvent.observePageOnce(this, viewModelStore) {
+    // 事件能多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
+}
+```
+
+## AsyncJob用法
 ViewModel层：
 ```kotlin
 class MainViewModel : ViewModel() {

@@ -17,7 +17,7 @@ if (toUpload) {
     // 依赖信息
     def groupIdDefined = "com.licheedev"
     def artifactIdDefined = "livedata-ext"
-    def versionDefined = "1.0.1"
+    def versionDefined = "1.0.2"
     // 其他信息
     def siteUrl = "https://github.com/licheedev"
     def gitUrl = "https://github.com/licheedev/LiveDataExtension.git"

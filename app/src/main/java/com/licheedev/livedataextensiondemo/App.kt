@@ -1,6 +1,7 @@
 package com.licheedev.livedataextensiondemo
 
 import android.app.Application
+import com.licheedev.someext.livedata.LiveEvent
 import okhttp3.OkHttpClient
 import rxhttp.RxHttp
 import rxhttp.wrapper.ssl.HttpsUtils
@@ -17,5 +18,8 @@ class App : Application() {
         // 配置rxhttp
         RxHttp.setDebug(false)
         RxHttp.init(builder.build())
+
+
+
     }
 }

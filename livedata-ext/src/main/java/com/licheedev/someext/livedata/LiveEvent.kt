@@ -28,7 +28,21 @@ import androidx.lifecycle.ViewModelStore
  *
  * @param <T>
  */
-class SafeLiveEvent<T> : LiveData<T>() {
+class LiveEvent<T>() : LiveData<T>() {
+
+
+    /** 事件存活时长，毫秒 */
+    private var eventTimeout = 0L
+
+    /**
+     * 具有防数据倒灌功能的LiveData
+     * @param eventTimeout Long 毫秒，事件存活的时长，仅time>0时有效。当事件被发送后，超过一定时间，该事件将无法继续被观察到
+     * @constructor
+     */
+    constructor(eventTimeout: Long) : this() {
+        setEventTimeout(eventTimeout)
+    }
+
 
     private val mProxy = EventLiveData<T>()
 
@@ -76,12 +90,11 @@ class SafeLiveEvent<T> : LiveData<T>() {
 
     @MainThread
     public override fun setValue(value: T) {
-        mProxy.setValue(Event(value))
+        mProxy.setValue(Event(value, eventTimeout))
     }
 
-
     public override fun postValue(value: T) {
-        mProxy.postValue(Event(value))
+        mProxy.postValue(Event(value, eventTimeout))
     }
 
     override fun getValue(): T? {
@@ -97,6 +110,14 @@ class SafeLiveEvent<T> : LiveData<T>() {
                 setValue(value)
             }
         }
+    }
+
+    /**
+     * 设置事件超时时间，当事件被发送后，超过一定时间，该事件将无法继续被观察到
+     * @param eventTimeout Long 毫秒，事件存活的时长，仅time>0时有效
+     */
+    fun setEventTimeout(eventTimeout: Long) {
+        this.eventTimeout = Math.max(eventTimeout, 0L)
     }
 
     companion object {

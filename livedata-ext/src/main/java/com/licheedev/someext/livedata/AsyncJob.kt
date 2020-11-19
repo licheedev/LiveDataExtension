@@ -11,7 +11,7 @@ import com.licheedev.someext.livedata.AsyncData.Companion.FAILURE
 import com.licheedev.someext.livedata.AsyncData.Companion.PROGRESS
 import com.licheedev.someext.livedata.AsyncData.Companion.SUCCESS
 
-/** 基于LiveData事件的，可以用来发送异步任务事件数据，并使用类似[LiveData.observe]的方式对时间数据进行处理。
+/** 基于LiveData实现，可以用来发送异步任务事件数据，并使用类似[LiveData.observe]的方式对时间数据进行处理。
  *
  * @param strategy 观察者消费事件策略，可以选择:
  * [ObserverStrategy.PageOnce] (默认值。多个页面都能收到1次事件，需要填入参数 [ViewModelStore] ）;
@@ -24,7 +24,20 @@ class AsyncJob<T>(
 
     constructor() : this(ObserverStrategy.PageOnce)
 
+
     private val mProxy = EventLiveData<AsyncData<T>>()
+
+
+    /** 事件存活时长，毫秒 */
+    private var eventTimeout = 0L
+    
+    /**
+     * 设置事件超时时间，当事件被发送后，超过一定时间，该事件将无法继续被观察到
+     * @param eventTimeout Long 毫秒，事件存活的时长，仅time>0时有效
+     */
+    fun setEventTimeout(eventTimeout: Long) {
+        this.eventTimeout = Math.max(eventTimeout, 0L)
+    }
 
     /** 额外的参数 */
     private val params = mutableMapOf<String, Any?>()
@@ -142,10 +155,10 @@ class AsyncJob<T>(
      * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param handler Observer<AsyncData<T>>
      */
-    inline fun observe(
+    fun observe(
         owner: LifecycleOwner,
         viewModelStore: ViewModelStore? = null,
-        crossinline handler: AsyncData<T>.() -> Unit
+        handler: AsyncData<T>.() -> Unit
     ) {
         this.observe(owner, viewModelStore, Observer {
             if (it != null) {
@@ -160,9 +173,9 @@ class AsyncJob<T>(
      * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param handler Observer<AsyncData<T>>
      */
-    inline fun observe(
+    fun observe(
         owner: LifecycleOwner,
-        crossinline handler: AsyncData<T>.() -> Unit
+        handler: AsyncData<T>.() -> Unit
     ) {
         this.observe(owner, null, handler)
     }
@@ -238,12 +251,13 @@ class AsyncJob<T>(
     }
 
     private fun doPostData(data: AsyncData<T>) {
+        val value = Event(data, eventTimeout)
         if (isUIThread()) {
-            mProxy.setValue(Event(data))
+            mProxy.setValue(value)
         } else {
             //postValue(data)
             mainHandler.post {
-                mProxy.setValue(Event(data))
+                mProxy.setValue(value)
             }
         }
     }

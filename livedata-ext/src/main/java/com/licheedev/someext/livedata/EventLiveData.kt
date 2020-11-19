@@ -24,6 +24,9 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
         observer: Observer<in T>
     ) {
         super.observe(owner, Observer { event ->
+            if (event.isOutdated) {
+                return@Observer
+            }
             val content = event.content
             observer.onChanged(content)
         })
@@ -40,6 +43,9 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
         observer: Observer<in T>
     ) {
         super.observe(owner, Observer { event ->
+            if (event.isOutdated) {
+                return@Observer
+            }
             val content = event.contentIfNotHandled
             if (content != null) {
                 observer.onChanged(content)
@@ -60,6 +66,9 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     ) {
         val viewModelStoreHash = System.identityHashCode(viewModelStore)
         super.observe(owner, Observer { event ->
+            if (event.isOutdated) {
+                return@Observer
+            }
             val content = event.getContentIfNotHandled(viewModelStoreHash)
             if (content != null) {
                 observer.onChanged(content)
@@ -71,8 +80,9 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
         //super.observeForever(observer)
         throw IllegalStateException("不推荐调用这个方法，存在安全隐患")
     }
-    
+
     public override fun setValue(value: Event<T>) {
+        value.updateStartTime()
         super.setValue(value)
     }
 

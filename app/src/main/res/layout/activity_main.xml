@@ -6,12 +6,24 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
-    
+
+    <Button
+        android:id="@+id/btnAnotherActivity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="其他页面" />
+
     <Button
         android:id="@+id/btnLoadBaidu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="加载百度首页" />
+
+    <Button
+        android:id="@+id/btnObserveMore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="再来一个" />
 
     <TextView
         android:id="@+id/tvContent"
