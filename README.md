@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.0.2'
+    implementation 'com.licheedev:livedata-ext:1.0.3'
 }
 ```
 
@@ -31,8 +31,8 @@ val liveEvent = LiveEvent<String>()
 // 或者可配置事件超时，超时后，观察者无法接收到事件
 //val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
 
-liveEvent.observe(this) {
-    // 跟原版LiveData相似，观察者始终能接收到事件
+liveEvent.observeAlways(this) {
+    // 跟原版LiveData.observe()相似，观察者始终能接收到事件
 }
 
 liveEvent.observeSingle(this) {
@@ -42,6 +42,12 @@ liveEvent.observeSingle(this) {
 liveEvent.observePageOnce(this, viewModelStore) {
     // 事件能被多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
 }
+
+liveEvent.safeObserveForever {
+    // 跟原版LiveData.observeForever()相似
+}
+
+liveEvent.removeWrapperObserver(observer) // 即 LiveData.removeObservers()
 ```
 
 ## AsyncJob用法

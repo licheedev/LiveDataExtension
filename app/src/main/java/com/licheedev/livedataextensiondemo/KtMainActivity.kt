@@ -3,6 +3,7 @@ package com.licheedev.livedataextensiondemo
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.lifecycle.observe
 import com.licheedev.myutils.LogPlus
 import com.licheedev.someext.livedata.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -22,7 +23,7 @@ class KtMainActivity : AppCompatActivity() {
         btnAnotherActivity.setOnClickListener {
             startActivity(Intent(this, AnotherActivity::class.java))
         }
-
+        
         val sampleJob = ShareData.sampleJob
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Single)
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Always)
@@ -111,11 +112,7 @@ class KtMainActivity : AppCompatActivity() {
             sampleJob.postCustom("some_custom_key", null) // 自定义事件
             sampleJob.postCustom("other_custom_key", 234) // 自定义事件
         }
-
-
-
-
-
+        
         btnObserveMore.setOnClickListener {
 
             // 匿名内部类方式（推荐Java代码使用）
