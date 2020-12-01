@@ -40,7 +40,7 @@ liveEvent.observeSingle(this) {
 }
 
 liveEvent.observeMulti(this) {
-    // 事件能被多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
+    // 多个Observer都能接收1次事件（仅能收到注册后的发送的事件）
 }
 
 val wrappedObserver = liveEvent.safeObserveForever {
