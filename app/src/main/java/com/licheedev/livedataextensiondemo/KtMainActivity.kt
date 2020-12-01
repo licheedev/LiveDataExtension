@@ -23,13 +23,37 @@ class KtMainActivity : AppCompatActivity() {
         btnAnotherActivity.setOnClickListener {
             startActivity(Intent(this, AnotherActivity::class.java))
         }
-        
+
+
+        //val liveEvent = LiveEvent<String>()
+        //// 或者可配置事件超时，超时后，观察者无法接收到事件
+        //// val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
+        //
+        //liveEvent.observeNormal(this) {
+        //    // 跟原版LiveData.observe()相似，观察者始终能接收到事件
+        //}
+        //
+        //liveEvent.observeSingle(this) {
+        //    // 事件仅能被1个观察者接收到1次
+        //}
+        //
+        //liveEvent.observeMulti(this) {
+        //    // 事件能被多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
+        //}
+        //
+        //val wrappedObserver = liveEvent.safeObserveForever {
+        //    // 跟原版LiveData.observeForever()相似
+        //}
+        //
+        //liveEvent.removeObserver(wrappedObserver) // 安全移除Observer
+
+
         val sampleJob = ShareData.sampleJob
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Single)
         //val sampleJob = AsyncJob<String>(ObserverStrategy.Always)
         sampleJob["type"] = 999
         // dsl方式
-        sampleJob.observe(this, viewModelStore) {
+        sampleJob.observe(this) {
 
             handleBegin {
                 LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=$attachment")
@@ -57,7 +81,7 @@ class KtMainActivity : AppCompatActivity() {
         }
 
         // when/switch-case方式
-        sampleJob.observe(this, viewModelStore) { it ->
+        sampleJob.observe(this) { it ->
             when (it.key) {
                 AsyncData.BEGIN -> {
                     LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${it.attachment}")
@@ -81,7 +105,7 @@ class KtMainActivity : AppCompatActivity() {
         }
 
         // 匿名内部类方式（推荐Java代码使用）
-        sampleJob.observe(this, viewModelStore, object : AsyncJobObserver<String>() {
+        sampleJob.observe(this, object : AsyncJobObserver<String>() {
 
             override fun onBegin() {
                 LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${attachment}")
@@ -112,11 +136,11 @@ class KtMainActivity : AppCompatActivity() {
             sampleJob.postCustom("some_custom_key", null) // 自定义事件
             sampleJob.postCustom("other_custom_key", 234) // 自定义事件
         }
-        
+
         btnObserveMore.setOnClickListener {
 
             // 匿名内部类方式（推荐Java代码使用）
-            sampleJob.observe(this, viewModelStore, object : AsyncJobObserver<String>() {
+            sampleJob.observe(this, object : AsyncJobObserver<String>() {
 
                 override fun onBegin() {
                     LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${attachment}")

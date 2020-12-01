@@ -5,7 +5,6 @@ import android.os.Looper
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelStore
 import com.licheedev.someext.livedata.AsyncData.Companion.BEGIN
 import com.licheedev.someext.livedata.AsyncData.Companion.FAILURE
 import com.licheedev.someext.livedata.AsyncData.Companion.PROGRESS
@@ -14,15 +13,15 @@ import com.licheedev.someext.livedata.AsyncData.Companion.SUCCESS
 /** 基于LiveData实现，可以用来发送异步任务事件数据，并使用类似[LiveData.observe]的方式对时间数据进行处理。
  *
  * @param strategy 观察者消费事件策略，可以选择:
- * [ObserverStrategy.PageOnce] (默认值。多个页面都能收到1次事件，需要填入参数 [ViewModelStore] ）;
- * [ObserverStrategy.Single] (只能收到1次事件);
+ * [ObserverStrategy.Single] (默认值。只能1个Observer收到1次事件);
+ * [ObserverStrategy.Multi] (多个Observer收到1次事件）;
  * [ObserverStrategy.Always] (事件总是能发送到Observer)。
  */
 class AsyncJob<T>(
-    private val strategy: ObserverStrategy = ObserverStrategy.PageOnce
+    private val strategy: ObserverStrategy = ObserverStrategy.Single
 ) {
 
-    constructor() : this(ObserverStrategy.PageOnce)
+    constructor() : this(ObserverStrategy.Single)
 
 
     private val mProxy = EventLiveData<AsyncData<T>>()
@@ -30,7 +29,7 @@ class AsyncJob<T>(
 
     /** 事件存活时长，毫秒 */
     private var eventTimeout = 0L
-    
+
     /**
      * 设置事件超时时间，当事件被发送后，超过一定时间，该事件将无法继续被观察到
      * @param eventTimeout Long 毫秒，事件存活的时长，仅time>0时有效
@@ -57,57 +56,37 @@ class AsyncJob<T>(
     /**
      * 观察事件
      * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param observer Observer<AsyncData<T>>
      */
     fun observe(
         owner: LifecycleOwner,
-        viewModelStore: ViewModelStore? = null,
         observer: Observer<AsyncData<T>>
     ) {
         when (strategy) {
             ObserverStrategy.Always -> {
-                mProxy.observeAlways(owner, observer)
+                mProxy.observeNormal(owner, observer)
             }
             ObserverStrategy.Single -> {
                 mProxy.observeSingle(owner, observer)
             }
-            ObserverStrategy.PageOnce -> {
-                if (viewModelStore == null) {
-                    mProxy.observeSingle(owner, observer)
-                } else {
-                    mProxy.observePageOnce(owner, viewModelStore, observer)
-                }
+            ObserverStrategy.Multi -> {
+                mProxy.observeMulti(owner, observer)
             }
         }
     }
 
-    /**
-     * 观察事件
-     * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
-     * @param observer Observer<AsyncData<T>>
-     */
-    fun observe(
-        owner: LifecycleOwner,
-        observer: Observer<AsyncData<T>>
-    ) {
-        this.observe(owner, null, observer)
-    }
 
     /**
      * 观察事件
      * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param observer Observer<AsyncData<T>>
      */
     fun observe(
         owner: LifecycleOwner,
-        viewModelStore: ViewModelStore? = null,
         observer: AsyncJobObserver<T>
     ) {
 
-        this.observe(owner, viewModelStore, object : Observer<AsyncData<T>> {
+        this.observe(owner, object : Observer<AsyncData<T>> {
             override fun onChanged(t: AsyncData<T>?) {
                 if (t == null) {
                     return
@@ -139,45 +118,18 @@ class AsyncJob<T>(
     /**
      * 观察事件
      * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
-     * @param observer Observer<AsyncData<T>>
-     */
-    fun observe(
-        owner: LifecycleOwner,
-        observer: AsyncJobObserver<T>
-    ) {
-        this.observe(owner, null, observer)
-    }
-
-    /**
-     * 观察事件
-     * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
+     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.Multi] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param handler Observer<AsyncData<T>>
      */
     fun observe(
         owner: LifecycleOwner,
-        viewModelStore: ViewModelStore? = null,
         handler: AsyncData<T>.() -> Unit
     ) {
-        this.observe(owner, viewModelStore, Observer {
+        this.observe(owner, Observer {
             if (it != null) {
                 handler.invoke(it)
             }
         })
-    }
-
-    /**
-     * 观察事件
-     * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.PageOnce] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
-     * @param handler Observer<AsyncData<T>>
-     */
-    fun observe(
-        owner: LifecycleOwner,
-        handler: AsyncData<T>.() -> Unit
-    ) {
-        this.observe(owner, null, handler)
     }
 
 
@@ -186,7 +138,6 @@ class AsyncJob<T>(
     fun postBegin(attachment: Any? = null) {
         val data = AsyncData(this, BEGIN, Unit, attachment)
         doPostData(data)
-
     }
 
     /** 发送成功数据 */

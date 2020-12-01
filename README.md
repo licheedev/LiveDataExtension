@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.0.3'
+    implementation 'com.licheedev:livedata-ext:1.1.0'
 }
 ```
 
@@ -29,9 +29,9 @@ dependencies {
 ```kotlin
 val liveEvent = LiveEvent<String>()
 // 或者可配置事件超时，超时后，观察者无法接收到事件
-//val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
+// val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
 
-liveEvent.observeAlways(this) {
+liveEvent.observeNormal(this) {
     // 跟原版LiveData.observe()相似，观察者始终能接收到事件
 }
 
@@ -39,15 +39,15 @@ liveEvent.observeSingle(this) {
     // 事件仅能被1个观察者接收到1次
 }
 
-liveEvent.observePageOnce(this, viewModelStore) {
+liveEvent.observeMulti(this) {
     // 事件能被多个页面的观察者接收到，每个页面仅有1个观察者能接收到事件1次
 }
 
-liveEvent.safeObserveForever {
+val wrappedObserver = liveEvent.safeObserveForever {
     // 跟原版LiveData.observeForever()相似
 }
 
-liveEvent.removeWrapperObserver(observer) // 即 LiveData.removeObservers()
+liveEvent.removeObserver(wrappedObserver) // 安全移除Observer
 ```
 
 ## AsyncJob用法
@@ -79,7 +79,7 @@ btnLoadBaidu.setOnClickListener {
     viewModel.loadBaidu(this)
 }
 // 加载结果
-viewModel.loadBaiduJob.observe(this, viewModelStore) {
+viewModel.loadBaiduJob.observe(this) {
 
     handleBegin {
         "显示个菊花吧".showToast()

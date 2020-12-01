@@ -1,16 +1,19 @@
 package com.licheedev.someext.livedata
 
+import android.util.SparseIntArray
+import androidx.core.util.forEach
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelStore
 
 internal class EventLiveData<T> : LiveData<Event<T>>() {
 
-    @Deprecated("不要调用此函数，请调用observeAlways()、observeSingle()或observePageOnce()")
+    private val handledArray = SparseIntArray()
+
+    @Deprecated("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
     override fun observe(owner: LifecycleOwner, observer: Observer<in Event<T>>) {
         //super.observe(owner, observer)
-        throw IllegalStateException("不要调用这个方法，请调用observeAlways()、observeSingle()或observePageOnce()")
+        throw IllegalStateException("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
     }
 
     @Deprecated(
@@ -26,13 +29,13 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
      * Observer总是能接收到事件，跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
-     * @return Observer<Event<T>> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
-    fun observeAlways(
+    fun observeNormal(
         owner: LifecycleOwner,
         observer: Observer<in T>
-    ): Observer<Event<T>> {
-        val wrapper = object : Observer<Event<T>> {
+    ): EventObserver<T> {
+        val wrapper = object : EventObserver<T>(0) {
             override fun onChanged(event: Event<T>) {
                 if (event.isOutdated) {
                     return
@@ -49,13 +52,13 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
      * 仅1个Observer能接收到事件，且该事件仅能被接收1次
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
-     * @return Observer<Event<T>> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
     fun observeSingle(
         owner: LifecycleOwner,
         observer: Observer<in T>
-    ): Observer<Event<T>> {
-        val wrapper = object : Observer<Event<T>> {
+    ): EventObserver<T> {
+        val wrapper = object : EventObserver<T>(0) {
             override fun onChanged(event: Event<T>) {
                 if (event.isOutdated) {
                     return
@@ -71,28 +74,33 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     }
 
     /**
-     * 多个页面(ViewModelStore)的1个Observer都能接收1次事件
+     * 多个Observer都能接收1次事件（仅能收到注册后的发送的事件）
      * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore
      * @param observer Observer<T>
-     * @return Observer<Event<T>> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
-    fun observePageOnce(
-        owner: LifecycleOwner, viewModelStore: ViewModelStore,
+    fun observeMulti(
+        owner: LifecycleOwner,
         observer: Observer<in T>
-    ): Observer<Event<T>> {
-        val viewModelStoreHash = System.identityHashCode(viewModelStore)
-        val wrapper = object : Observer<Event<T>> {
+    ): EventObserver<T> {
+        val hash = System.identityHashCode(observer)
+        val wrapper = object : EventObserver<T>(hash) {
             override fun onChanged(event: Event<T>) {
                 if (event.isOutdated) {
                     return
                 }
-                val content = event.getContentIfNotHandled(viewModelStoreHash)
+
+                if (!shouldHandleEvent(hash)) {
+                    return
+                }
+
+                val content = event.content
                 if (content != null) {
                     observer.onChanged(content)
                 }
             }
         }
+        handledArray.put(hash, 1)
         super.observe(owner, wrapper)
         return wrapper
     }
@@ -100,10 +108,10 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     /**
      * 观察者永远都能观察到非超时的事件，直到被移除,跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
      * @param observer Observer<in T>
-     * @return Observer<Event<T>> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
-    fun safeObserveForever(observer: Observer<in T>): Observer<Event<T>> {
-        val wrapper = object : Observer<Event<T>> {
+    fun safeObserveForever(observer: Observer<in T>): EventObserver<T> {
+        val wrapper = object : EventObserver<T>(0) {
             override fun onChanged(event: Event<T>) {
                 if (event.isOutdated) {
                     return
@@ -116,13 +124,41 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     }
 
 
+    override fun removeObserver(observer: Observer<in Event<T>>) {
+        super.removeObserver(observer)
+        if (observer is EventObserver<*>) {
+            handledArray.remove(observer.observerHash)
+        }
+    }
+
+    private fun SparseIntArray.remove(key: Int): Boolean {
+        val index = indexOfKey(key)
+        if (index >= 0) {
+            removeAt(index)
+            return true
+        }
+        return false
+    }
+
+
     public override fun setValue(value: Event<T>) {
         value.updateStartTime()
+        handledArray.forEach { key, _ ->
+            handledArray.put(key, 0)
+        }
         super.setValue(value)
     }
 
-    public override fun postValue(value: Event<T>?) {
+    public override fun postValue(value: Event<T>) {
         super.postValue(value)
     }
 
+    /** 判断是否需要处理事件 */
+    private fun shouldHandleEvent(hash: Int): Boolean =
+        if (handledArray.indexOfKey(hash) < 0 || handledArray.get(hash) > 0) {
+            false
+        } else {
+            handledArray.put(hash, 1)
+            true
+        }
 }

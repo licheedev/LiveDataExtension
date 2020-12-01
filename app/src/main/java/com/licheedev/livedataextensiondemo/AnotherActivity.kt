@@ -11,13 +11,13 @@ class AnotherActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "AnotherActivity"
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_another)
 
         val sampleJob = ShareData.sampleJob
-        sampleJob.observe(this, viewModelStore, object : AsyncJobObserver<String>() {
+        sampleJob.observe(this, object : AsyncJobObserver<String>() {
 
             override fun onBegin() {
                 LogPlus.i(TAG, "开始任务，弹个菊花对话框吧,附件=${attachment}")
@@ -39,6 +39,6 @@ class AnotherActivity : AppCompatActivity() {
                 LogPlus.i(TAG, "任何自定义事件(无数据时，value=key)，key=${key},事件数据=${value}")
             }
         })
-        
+
     }
 }

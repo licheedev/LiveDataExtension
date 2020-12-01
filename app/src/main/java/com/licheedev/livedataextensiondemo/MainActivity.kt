@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.loadBaidu(this)
         }
         // 加载结果
-        viewModel.loadBaiduJob.observe(this, viewModelStore) {
+        viewModel.loadBaiduJob.observe(this) {
 
             handleBegin {
                 "显示个菊花吧".showToast()
