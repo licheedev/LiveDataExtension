@@ -52,13 +52,6 @@ class LiveEvent<T>() : LiveData<T>() {
 
     private val mProxy = EventLiveData<T>()
 
-
-    @Deprecated("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
-    override fun observe(owner: LifecycleOwner, observer: Observer<in T>) {
-        //super.observe(owner, observer)
-        throw IllegalStateException("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
-    }
-
     @Deprecated(
         "不要调用此函数，此函数无法获得实际的观察者对象，存在内存泄露隐患",
         ReplaceWith("请使用带返回值的函数，safeObserveForever(observer): EventObserver")
@@ -72,6 +65,11 @@ class LiveEvent<T>() : LiveData<T>() {
     override fun removeObserver(observer: Observer<in T>) {
         //super.removeObserver(observer)
         throw java.lang.IllegalStateException("由于内部使用了代理对象，此函数实际上不会移除任何东西")
+    }
+
+    @Deprecated("此函数内部使用了observeMulti(),不会返回真实的观察者对象，请尽量调用observeSingle()或observeMulti()")
+    override fun observe(owner: LifecycleOwner, observer: Observer<in T>) {
+        mProxy.observeMulti(owner, observer)
     }
 
     /**

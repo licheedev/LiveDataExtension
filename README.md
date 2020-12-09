@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.1.0'
+    implementation 'com.licheedev:livedata-ext:1.1.1'
 }
 ```
 
