@@ -1,5 +1,6 @@
 package com.licheedev.someext.livedata
 
+import android.util.Log
 import android.util.SparseIntArray
 import androidx.core.util.forEach
 import androidx.lifecycle.LifecycleOwner
@@ -10,7 +11,7 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
 
     private val handledArray = SparseIntArray()
 
-    @Deprecated("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
+    @Deprecated("不要调用此函数，请调用observeNormal()、observeSingle()或observeFuture()")
     override fun observe(owner: LifecycleOwner, observer: Observer<in Event<T>>) {
         //super.observe(owner, observer)
         throw IllegalStateException("不要调用此函数，请调用observeNormal()、observeSingle()或observeMulti()")
@@ -22,11 +23,11 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     )
     override fun observeForever(observer: Observer<in Event<T>>) {
         //super.observeForever(observer)
-        throw java.lang.IllegalStateException("不要调用此函数，此函数无法获得实际的观察者对象，存在安全隐患，请使用带返回值的observeForever()")
+        throw java.lang.IllegalStateException("不要调用此函数，此函数无法获得实际的观察者对象，存在安全隐患，请使用带返回值的safeObserveForever()")
     }
 
     /**
-     * Observer总是能接收到事件，跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
+     * 使用 [observeNormal] 注册的Observer总是能接收到非超时事件，即跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
@@ -49,7 +50,8 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     }
 
     /**
-     * 仅1个Observer能接收到事件，且该事件仅能被接收1次
+     * 【慎用】若使用 [observeSingle] 注册多个Observer，当事件发生时，只有其中一个Observer（无法确定是哪一个）能接收1次该事件。
+     *  该事件被消费后且未超时，仅可以被使用 [observeNormal] 注册的Observer消费。
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
@@ -74,12 +76,12 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     }
 
     /**
-     * 多个Observer都能接收1次事件（仅能收到注册后的发送的事件）
+     * 使用 [observeFuture] 注册的Observer，在注册时不会接收到之前发生过的事件，仅能接收注册之后发生的事件。
      * @param owner LifecycleOwner
      * @param observer Observer<T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
-    fun observeMulti(
+    fun observeFuture(
         owner: LifecycleOwner,
         observer: Observer<in T>
     ): EventObserver<T> {
@@ -100,13 +102,25 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
                 }
             }
         }
+        //Log.e("注册", hash.toString())
+        // 注册的时候，直接标记此观察者已经处理过事件（1）
+        // 等setValue的时候，才把状态标记为未处理（0）
         handledArray.put(hash, 1)
         super.observe(owner, wrapper)
         return wrapper
     }
 
+    /** 判断是否需要处理事件，0为未处理，1为已处理 */
+    private fun shouldHandleEvent(hash: Int): Boolean =
+        if (handledArray.indexOfKey(hash) < 0 || handledArray.get(hash) > 0) {
+            false
+        } else {
+            handledArray.put(hash, 1)
+            true
+        }
+
     /**
-     * 观察者永远都能观察到非超时的事件，直到被移除,跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
+     * Observer永远都能观察到非超时的事件，直到被移除，跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
@@ -127,6 +141,7 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     override fun removeObserver(observer: Observer<in Event<T>>) {
         super.removeObserver(observer)
         if (observer is EventObserver<*>) {
+            //Log.e("移除", observer.observerHash.toString())
             handledArray.remove(observer.observerHash)
         }
     }
@@ -152,13 +167,4 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
     public override fun postValue(value: Event<T>) {
         super.postValue(value)
     }
-
-    /** 判断是否需要处理事件 */
-    private fun shouldHandleEvent(hash: Int): Boolean =
-        if (handledArray.indexOfKey(hash) < 0 || handledArray.get(hash) > 0) {
-            false
-        } else {
-            handledArray.put(hash, 1)
-            true
-        }
 }

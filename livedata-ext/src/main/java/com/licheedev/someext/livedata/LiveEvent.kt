@@ -58,7 +58,7 @@ class LiveEvent<T>() : LiveData<T>() {
     )
     override fun observeForever(observer: Observer<in T>) {
         //super.observeForever(observer);
-        throw java.lang.IllegalStateException("不要调用此函数，此函数无法获得实际的观察者对象，存在安全隐患，请使用带返回值的observeForever()")
+        throw java.lang.IllegalStateException("不要调用此函数，此函数无法获得实际的观察者对象，存在安全隐患，请使用带返回值的safeObserveForever()")
     }
 
     @Deprecated("由于内部使用了代理对象，此函数实际上不会移除任何东西")
@@ -67,13 +67,13 @@ class LiveEvent<T>() : LiveData<T>() {
         throw java.lang.IllegalStateException("由于内部使用了代理对象，此函数实际上不会移除任何东西")
     }
 
-    @Deprecated("此函数内部使用了observeMulti(),不会返回真实的观察者对象，请尽量调用observeSingle()或observeMulti()")
+    @Deprecated("此方法内部使用了observeFuture()，由于不会返回真实的Observer对象，可能存在安全隐患，请尽量使用observeFuture()")
     override fun observe(owner: LifecycleOwner, observer: Observer<in T>) {
-        mProxy.observeMulti(owner, observer)
+        mProxy.observeFuture(owner, observer)
     }
 
     /**
-     * Observer总是能接收到事件，跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
+     * 使用 [observeNormal] 注册的Observer总是能接收到非超时事件，即跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
@@ -83,7 +83,8 @@ class LiveEvent<T>() : LiveData<T>() {
     }
 
     /**
-     * 仅1个Observer能接收到事件，且该事件仅能被接收1次
+     * 【慎用】若使用 [observeSingle] 注册多个Observer，当事件发生时，只有其中一个Observer（无法确定是哪一个）能接收1次该事件。
+     *  该事件被消费后且未超时，仅可以被使用 [observeNormal] 注册的Observer消费。
      * @param owner LifecycleOwner
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
@@ -96,20 +97,20 @@ class LiveEvent<T>() : LiveData<T>() {
     }
 
     /**
-     * 多个Observer都能接收1次事件（仅能收到注册后的发送的事件）
+     * 使用 [observeFuture] 注册的Observer，在注册时不会接收到之前发生过的事件，仅能接收注册之后发生的事件。
      * @param owner LifecycleOwner
      * @param observer Observer<T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
-    fun observeMulti(
+    fun observeFuture(
         owner: LifecycleOwner,
         observer: Observer<T>
     ): EventObserver<T> {
-        return mProxy.observeMulti(owner, observer)
+        return mProxy.observeFuture(owner, observer)
     }
 
     /**
-     * 观察者永远都能观察到非超时的事件，直到被移除,跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
+     * Observer永远都能观察到非超时的事件，直到被移除，跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
      * @param observer Observer<in T>
      * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
      */
@@ -123,7 +124,7 @@ class LiveEvent<T>() : LiveData<T>() {
     }
 
     /**
-     * 移除实际上注册的观察者对象（即 [observeNormal]、[observeSingle]、[observeMulti]、[safeObserveForever] 的返回值）
+     * 移除实际上注册的观察者对象（即 [observeNormal]、[observeSingle]、[observeFuture]、[safeObserveForever] 的返回值）
      * @param observer Observer<in Event<T>>
      */
     fun removeObserver(observer: EventObserver<T>) {
@@ -136,8 +137,26 @@ class LiveEvent<T>() : LiveData<T>() {
         mProxy.setValue(Event(value, eventTimeout))
     }
 
-    public override fun postValue(value: T?) {
-        mProxy.postValue(Event(value, eventTimeout))
+    override fun postValue(value: T) {
+        postValue(value, true)
+    }
+
+    /**
+     * 发送数据，如果在UI线程使用直接[setValue]。
+     * 如果在子线程，则根据[useHandlerPost]的值，如果为true，则使用 [Handler.post]来[setValue]；如果为false，则使用[LiveData.postValue]。
+     * @param value T?
+     * @param useHandlerPost Boolean 如果为true，则使用 [Handler.post]来[setValue]；如果为false，则使用[LiveData.postValue]
+     */
+    fun postValue(value: T?, useHandlerPost: Boolean = true) {
+        if (isUIThread()) {
+            setValue(value)
+        } else if (useHandlerPost) {
+            mainHandler.post {
+                setValue(value)
+            }
+        } else {
+            mProxy.postValue(Event(value, eventTimeout))
+        }
     }
 
     override fun getValue(): T? {
@@ -150,17 +169,6 @@ class LiveEvent<T>() : LiveData<T>() {
 
     override fun hasActiveObservers(): Boolean {
         return mProxy.hasActiveObservers()
-    }
-
-    /** 如果调用线程在主线程，则使用 [LiveData.setValue]，否则使用 [Handler.post] 之后 [LiveData.setValue] */
-    fun setPostValue(value: T) {
-        if (isUIThread()) {
-            setValue(value)
-        } else {
-            mainHandler.post {
-                setValue(value)
-            }
-        }
     }
 
     companion object {

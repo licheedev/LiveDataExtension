@@ -13,15 +13,14 @@ import com.licheedev.someext.livedata.AsyncData.Companion.SUCCESS
 /** 基于LiveData实现，可以用来发送异步任务事件数据，并使用类似[LiveData.observe]的方式对时间数据进行处理。
  *
  * @param strategy 观察者消费事件策略，可以选择:
- * [ObserverStrategy.Single] (默认值。只能1个Observer收到1次事件);
- * [ObserverStrategy.Multi] (多个Observer收到1次事件）;
- * [ObserverStrategy.Always] (事件总是能发送到Observer)。
+ * [ObserverStrategy.AfterRegistered] (默认，Observer仅能接收注册后发生的事件）;
+ * [ObserverStrategy.Always] (Observer总是能接收到事件)。
  */
 class AsyncJob<T>(
-    private val strategy: ObserverStrategy = ObserverStrategy.Single
+    private val strategy: ObserverStrategy = ObserverStrategy.AfterRegistered
 ) {
 
-    constructor() : this(ObserverStrategy.Single)
+    constructor() : this(ObserverStrategy.AfterRegistered)
 
 
     private val mProxy = EventLiveData<AsyncData<T>>()
@@ -66,15 +65,11 @@ class AsyncJob<T>(
             ObserverStrategy.Always -> {
                 mProxy.observeNormal(owner, observer)
             }
-            ObserverStrategy.Single -> {
-                mProxy.observeSingle(owner, observer)
-            }
-            ObserverStrategy.Multi -> {
-                mProxy.observeMulti(owner, observer)
+            ObserverStrategy.AfterRegistered -> {
+                mProxy.observeFuture(owner, observer)
             }
         }
     }
-
 
     /**
      * 观察事件
@@ -118,7 +113,6 @@ class AsyncJob<T>(
     /**
      * 观察事件
      * @param owner LifecycleOwner
-     * @param viewModelStore ViewModelStore? 观察策略为 [ObserverStrategy.Multi] 时使用，没有或不填的话，则使用 [ObserverStrategy.Single] 策略
      * @param handler Observer<AsyncData<T>>
      */
     fun observe(
@@ -131,8 +125,7 @@ class AsyncJob<T>(
             }
         })
     }
-
-
+    
     /** 发送开始事件 */
     @JvmOverloads
     fun postBegin(attachment: Any? = null) {

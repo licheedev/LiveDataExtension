@@ -1,10 +1,14 @@
-package com.licheedev.livedataextensiondemo
+package com.licheedev.livedataextensiondemo.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.navigation.fragment.findNavController
+import com.licheedev.livedataextensiondemo.R
+import com.licheedev.livedataextensiondemo.ShareData
 import com.licheedev.myutils.LogPlus
 import com.licheedev.someext.livedata.AsyncJobException
 import com.licheedev.someext.livedata.AsyncJobObserver
+import kotlinx.android.synthetic.main.activity_another.*
 
 class AnotherActivity : AppCompatActivity() {
 

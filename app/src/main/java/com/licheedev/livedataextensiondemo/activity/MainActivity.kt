@@ -1,14 +1,18 @@
-package com.licheedev.livedataextensiondemo
+package com.licheedev.livedataextensiondemo.activity
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
+import com.licheedev.livedataextensiondemo.MainViewModel
+import com.licheedev.livedataextensiondemo.R
+import com.licheedev.livedataextensiondemo.ShareData
 import com.licheedev.myutils.LogPlus
-import com.licheedev.someext.livedata.*
+import com.licheedev.someext.livedata.betterLifecycleOwner
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
-import java.lang.RuntimeException
 
 class MainActivity : AppCompatActivity() {
 
@@ -41,21 +45,21 @@ class MainActivity : AppCompatActivity() {
                     tvContent.text = it.toString()
                 }
             }
-            
-            //handleProgress {
-            //    // 可选，进度事件
-            //}
-            //
-            //handleCustom("custom_key") {
-            //    // 可选，自定义事件
-            //}
-            //
-            //handleCustom { key, value ->
-            //    // 可选，任意自定义事件
-            //}
+
+            handleProgress {
+                // 可选，进度事件
+            }
+
+            handleCustom("custom_key") {
+                // 可选，自定义事件
+            }
+
+            handleCustom { key, value ->
+                // 可选，任意自定义事件
+            }
         }
 
     }
-
-
 }
+
+

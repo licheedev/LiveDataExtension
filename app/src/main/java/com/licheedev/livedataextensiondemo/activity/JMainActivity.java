@@ -1,9 +1,10 @@
-package com.licheedev.livedataextensiondemo;
+package com.licheedev.livedataextensiondemo.activity;
 
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
+import com.licheedev.livedataextensiondemo.R;
 import com.licheedev.myutils.LogPlus;
 import com.licheedev.someext.livedata.AsyncData;
 import com.licheedev.someext.livedata.AsyncJob;

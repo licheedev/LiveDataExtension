@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.1.1'
+    implementation 'com.licheedev:livedata-ext:1.1.2'
 }
 ```
 
@@ -31,16 +31,16 @@ val liveEvent = LiveEvent<String>()
 // 或者可配置事件超时，超时后，观察者无法接收到事件
 // val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
 
+liveEvent.observeFuture(this) {
+    // 使用 [observeFuture] 注册的Observer，在注册时不会接收到之前发生过的事件，仅能接收注册之后发生的事件。
+}
+
 liveEvent.observeNormal(this) {
-    // 跟原版LiveData.observe()相似，观察者始终能接收到事件
+    // 使用 [observeNormal] 注册的Observer总是能接收到非超时事件，即跟原版 [LiveData] 的 [LiveData.observe] 的行为一样
 }
 
 liveEvent.observeSingle(this) {
-    // 事件仅能被1个观察者接收到1次
-}
-
-liveEvent.observeMulti(this) {
-    // 多个Observer都能接收1次事件（仅能收到注册后的发送的事件）
+    // 若使用 [observeSingle] 注册多个Observer，当事件发生时，只有其中一个Observer（无法确定是哪一个）能接收1次该事件。
 }
 
 val wrappedObserver = liveEvent.safeObserveForever {
@@ -115,8 +115,3 @@ viewModel.loadBaiduJob.observe(this) {
 Kotlin用法： [KtMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/KtMainActivity.kt)
 
 Java用法： [JMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/JMainActivity.java)
-
-
-
-
-
