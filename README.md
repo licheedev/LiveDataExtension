@@ -9,6 +9,15 @@
 
 ## 添加依赖
 ```gradle
+// 根build.gradle
+allprojects {
+    repositories {
+        ...
+        mavenCentral()
+    }
+}
+
+// 子module build.gradle
 android {
     ...
     compileOptions {
@@ -112,6 +121,6 @@ viewModel.loadBaiduJob.observe(this) {
 
 其他用法可以参考
 
-Kotlin用法： [KtMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/KtMainActivity.kt)
+Kotlin用法： [KtMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/activity/KtMainActivity.kt)
 
-Java用法： [JMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/JMainActivity.java)
+Java用法： [JMainActivity.kt](https://github.com/licheedev/LiveDataExtension/blob/master/app/src/main/java/com/licheedev/livedataextensiondemo/activity/JMainActivity.java)
