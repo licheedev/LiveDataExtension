@@ -35,4 +35,17 @@ internal class Event<T>(val content: T?, private val eventSurvivalTime: Long = 0
             }
             return field
         }
+
+    /** 已处理集合 */
+    private val handledSet by lazy { mutableSetOf<Int>() }
+
+    /** 判断是否需要处理事件，未处理的标记为已处理 */
+    fun checkMarkHandled(hash: Int): Boolean =
+        if (handledSet.contains(hash)) {
+            false
+        } else {
+            handledSet.add(hash)
+            true
+        }
+
 }

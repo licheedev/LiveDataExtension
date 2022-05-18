@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.licheedev:livedata-ext:1.1.2'
+    implementation 'com.licheedev:livedata-ext:1.1.3'
 }
 ```
 
@@ -40,6 +40,9 @@ val liveEvent = LiveEvent<String>()
 // 或者可配置事件超时，超时后，观察者无法接收到事件
 // val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
 
+liveEvent.observeUnhandled(owner = this, hashProvider = KtMainActivity::class.java) {
+    // 只能观察到未被hashProvider处理过的事件
+}
 liveEvent.observeFuture(this) {
     // 使用 [observeFuture] 注册的Observer，在注册时不会接收到之前发生过的事件，仅能接收注册之后发生的事件。
 }

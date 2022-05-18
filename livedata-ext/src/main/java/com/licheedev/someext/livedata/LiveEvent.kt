@@ -109,6 +109,36 @@ class LiveEvent<T>() : LiveData<T>() {
         return mProxy.observeFuture(owner, observer)
     }
 
+
+    /**
+     * 使用 [observeUnhandled] 注册的Observer，接收到未被注入的[observer]消费过的事件
+     * @param owner LifecycleOwner
+     * @param hashProvider 用来标记已经处理事件的hash，可以用来填入[ViewModel]
+     * @param observer Observer<T>
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     */
+    fun observeUnhandled(
+        owner: LifecycleOwner,
+        hashProvider: Any,
+        observer: Observer<T>
+    ): EventObserver<T> {
+        return mProxy.observeUnhandled(owner, hashProvider, observer)
+    }
+
+    /**
+     * 使用 [observeUnhandled] 注册的Observer，接收到未被注入的[observer]消费过的事件
+     * @param owner LifecycleOwner
+     * @param observer Observer<T>
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     */
+    fun observeUnhandled(
+        owner: LifecycleOwner,
+        observer: Observer<T>
+    ): EventObserver<T> {
+        return mProxy.observeUnhandled(owner, observer, observer)
+    }
+
+
     /**
      * Observer永远都能观察到非超时的事件，直到被移除，跟原版 [LiveData] 的 [LiveData.observeForever] 的行为一样
      * @param observer Observer<in T>

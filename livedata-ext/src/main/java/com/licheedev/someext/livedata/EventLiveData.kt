@@ -1,6 +1,5 @@
 package com.licheedev.someext.livedata
 
-import android.util.Log
 import android.util.SparseIntArray
 import androidx.core.util.forEach
 import androidx.lifecycle.LifecycleOwner
@@ -109,6 +108,40 @@ internal class EventLiveData<T> : LiveData<Event<T>>() {
         super.observe(owner, wrapper)
         return wrapper
     }
+
+    /**
+     * 使用 [observeUnhandled] 注册的Observer，接收到未被注入的[observer]消费过的事件
+     * @param owner LifecycleOwner
+     * @param hashProvider 用来标记已经处理事件的hash，可以用来填入[ViewModel]
+     * @param observer Observer<T>
+     * @return EventObserver<T> 实际注册的观察者对象，在移除观察者 [LiveData.removeObserver] 时传入
+     */
+    fun observeUnhandled(
+        owner: LifecycleOwner,
+        hashProvider: Any,
+        observer: Observer<in T>,
+    ): EventObserver<T> {
+        val hash = System.identityHashCode(hashProvider)
+        val wrapper = object : EventObserver<T>(hash) {
+            override fun onChanged(event: Event<T>) {
+                if (event.isOutdated) {
+                    return
+                }
+
+                if (!event.checkMarkHandled(hash)) {
+                    return
+                }
+
+                val content = event.content
+                if (content != null) {
+                    observer.onChanged(content)
+                }
+            }
+        }
+        super.observe(owner, wrapper)
+        return wrapper
+    }
+
 
     /** 判断是否需要处理事件，0为未处理，1为已处理 */
     private fun shouldHandleEvent(hash: Int): Boolean =

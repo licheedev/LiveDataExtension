@@ -24,8 +24,11 @@ class KtMainActivity : AppCompatActivity() {
         btnAnotherActivity.setOnClickListener {
             startActivity(Intent(this, AnotherActivity::class.java))
         }
-        
-        //val liveEvent = LiveEvent<String>()
+
+        // val liveEvent = LiveEvent<String>()
+        // liveEvent.observeUnhandled(owner = this, hashProvider = KtMainActivity::class.java) {
+        //     // 只能观察到未被hashProvider处理过的事件
+        // }
         //// 或者可配置事件超时，超时后，观察者无法接收到事件
         //// val liveEvent = LiveEvent<String>(eventTimeout = 5000L)
         //
